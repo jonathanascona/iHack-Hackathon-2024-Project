@@ -20,6 +20,21 @@ def get_recipes(ingredients):
         print(f"Failed to fetch recipes. Status code: {response.status_code}")
         return None
 
+# Function to fetch recipe instructions based on recipe ID
+def get_recipe_instructions(recipe_id):
+    url = f"https://api.spoonacular.com/recipes/{recipe_id}/information?apiKey={API_KEY}"
+    
+    # Make the request to Spoonacular for recipe details
+    response = requests.get(url)
+    
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Return the JSON response containing the recipe details
+        return response.json().get('instructions', "No instructions available.")
+    else:
+        print(f"Failed to fetch instructions for recipe {recipe_id}. Status code: {response.status_code}")
+        return None
+
 # Function to display the recipe information
 def display_recipes(recipes, show_missing_ingredients):
     if recipes:
@@ -32,6 +47,10 @@ def display_recipes(recipes, show_missing_ingredients):
             if show_missing_ingredients:
                 print(f"Missing Ingredients: {[ingredient['name'] for ingredient in recipe['missedIngredients']]}")
             
+            # Fetch and display recipe instructions
+            instructions = get_recipe_instructions(recipe['id'])
+            print(f"Instructions: {instructions}")
+            
             print(f"Recipe Link: https://spoonacular.com/recipes/{recipe['id']}")
             print('-' * 40)
     else:
@@ -43,7 +62,7 @@ if __name__ == "__main__":
     user_ingredients = input("Enter ingredients (comma-separated): ").strip()
     
     # Ask the user if they want to see the missing ingredients
-    show_missing_ingredients = input("Would you like to see missing ingredients with available recipies? (yes/no): ").strip().lower() == 'yes'
+    show_missing_ingredients = input("Would you like to see missing ingredients? (yes/no): ").strip().lower() == 'yes'
     
     # Fetch the recipes based on the provided ingredients
     recipes = get_recipes(user_ingredients)

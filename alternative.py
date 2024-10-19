@@ -6,6 +6,7 @@
 import requests
 import json
 import os
+import re
 
 # Your Spoonacular API key
 API_KEY = "9d85a62254ac4052b9ff54e5d8425688"
@@ -29,9 +30,19 @@ def load_ingredients_from_file(filename="ingredients.txt"):
     except FileNotFoundError:
         return []
 
-# Function to fetch recipes based on ingredients
+# Function to parse ingredient string and detect quantity
+def parse_ingredient(ingredient):
+    # Regular expression to extract quantity and ingredient name
+    match = re.match(r"(\d+)?\s*(.*)", ingredient)
+    quantity = match.group(1) if match.group(1) else ""
+    name = match.group(2).strip() if match.group(2) else ingredient
+    return quantity, name
+
+# Function to fetch recipes based on ingredients (ignoring quantities)
 def get_recipes(ingredients):
-    url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={ingredients}&number=5&apiKey=9d85a62254ac4052b9ff54e5d8425688"
+    # Ignore the quantity for Spoonacular API
+    cleaned_ingredients = [parse_ingredient(ingredient)[1] for ingredient in ingredients]
+    url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={', '.join(cleaned_ingredients)}&number=5&apiKey=9d85a62254ac4052b9ff54e5d8425688"
     response = requests.get(url)
     
     if response.status_code == 200:
@@ -156,6 +167,9 @@ if __name__ == "__main__":
     # Prompt the user for ingredients (comma-separated)
     user_ingredients = input("Enter ingredients (comma-separated): ").strip().split(", ")
     
+    # Parse the user ingredients to detect quantities and ingredient names
+    parsed_ingredients = [parse_ingredient(ingredient) for ingredient in user_ingredients]
+    
     # Add new ingredients to the file
     add_ingredients_to_list(user_ingredients)
     
@@ -172,7 +186,7 @@ if __name__ == "__main__":
     show_prices = input("Would you like to see estimated prices for the missing ingredients? (yes/no): ").strip().lower() == 'yes'
     
     # Fetch the recipes based on the provided ingredients
-    recipes = get_recipes(", ".join(user_ingredients))
+    recipes = get_recipes(user_ingredients)
     
     # Display the fetched recipes with or without missing ingredients, instructions, nutrition facts, and ingredient prices for missing ingredients based on user choice
     display_recipes(recipes, show_missing_ingredients, show_nutrition, show_instructions, show_prices)

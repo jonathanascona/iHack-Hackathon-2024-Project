@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd 
 from alternative import get_recipes, display_recipes  # Import your functions
 
 # Set the page configuration
@@ -9,6 +10,32 @@ if 'ingredients' not in st.session_state:
     st.session_state['ingredients'] = []
 if 'ingredient_input' not in st.session_state:
     st.session_state['ingredient_input'] = ""
+
+# Sample saved recipes list (you can replace this with actual recipe data)
+saved_recipes = [
+    {"Recipe Name": "Spaghetti Bolognese", "Ingredients": "Pasta, Beef, Tomato Sauce", "Cooking Time": "30 min"},
+    {"Recipe Name": "Chicken Curry", "Ingredients": "Chicken, Curry Paste, Coconut Milk", "Cooking Time": "45 min"},
+    {"Recipe Name": "Pancakes", "Ingredients": "Flour, Eggs, Milk", "Cooking Time": "15 min"}
+]
+
+# Function to convert the saved recipes into a CSV format
+def convert_to_csv(data):
+    df = pd.DataFrame(data)  # Convert list of recipes into a DataFrame
+    return df.to_csv(index=False)
+
+# Sidebar on the right
+with st.sidebar:
+    st.header("Saved Recipes")  # Sidebar header
+
+    # Button to export saved recipes to a CSV file
+    if st.button("Export to CSV"):
+        csv = convert_to_csv(saved_recipes)
+        st.download_button(
+            label="Download CSV",
+            data=csv,
+            file_name='saved_recipes.csv',
+            mime='text/csv'
+        )
 
 def clear_ingredients():
     st.session_state['ingredients'] = []  # Reset the ingredients list
@@ -41,9 +68,8 @@ if st.session_state['ingredients']:
 else:
     st.sidebar.write("No ingredients added.")
 
-
 # Fetching recipes section
-st.header("Fetch Recipes")
+st.header("Quick Bite")
 if st.button("FETCH RECIPES"):
     if st.session_state['ingredients']:
         user_ingredients = ", ".join(st.session_state['ingredients'])
@@ -69,3 +95,4 @@ show_missing_ingredients = st.checkbox("Show Missing Ingredients", value=True)
 show_instructions = st.checkbox("Show Instructions", value=True)
 show_nutrition = st.checkbox("Show Nutrition Facts", value=True)
 show_prices = st.checkbox("Show Prices", value=True)
+show_missing_item_prices = st.checkbox("Show Missing Item Prices", value=True)

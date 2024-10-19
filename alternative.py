@@ -3,14 +3,11 @@
 # 10/18/24 - 10/19/24)
 
 
-# HACKATHON FALL SEMESTER 2024 #
-# DYLAN KOHN, JONATHAN NELSON, JONATHAN ASCONA #
-# 10/18/24 - 10/19/24 #
-
 import requests
 import json
 import os
 import re
+import csv
 import pytesseract
 from PIL import Image
 
@@ -172,6 +169,29 @@ def save_recipe(recipe):
     
     print(f"Recipe '{recipe['title']}' has been saved.")
 
+# Function to export saved recipes to CSV
+def export_saved_recipes_to_csv(csv_filename="saved_recipes.csv"):
+    if os.path.exists(SAVED_RECIPES_FILE):
+        with open(SAVED_RECIPES_FILE, 'r') as json_file:
+            saved_recipes = json.load(json_file)
+            if saved_recipes:
+                with open(csv_filename, 'w', newline='') as csv_file:
+                    fieldnames = ['Title', 'Link', 'Used Ingredients', 'Missing Ingredients']
+                    writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+                    writer.writeheader()
+                    for recipe in saved_recipes:
+                        writer.writerow({
+                            'Title': recipe['title'],
+                            'Link': recipe['link'],
+                            'Used Ingredients': ', '.join(recipe['used_ingredients']),
+                            'Missing Ingredients': ', '.join(recipe['missing_ingredients'])
+                        })
+                print(f"Saved recipes exported to {csv_filename}.")
+            else:
+                print("No recipes saved to export.")
+    else:
+        print("No saved recipes file found.")
+
 # Main program logic
 if __name__ == "__main__":
     # Ask if the user wants to clear the ingredients file
@@ -201,6 +221,8 @@ if __name__ == "__main__":
         
         if image_type == "receipt":
             extracted_text = extract_text_from_image(image_path)
+            if extracted_text
+
             if extracted_text:
                 print(f"Extracted ingredients from receipt: {extracted_text}")
                 user_ingredients = extracted_text.split("\n")
@@ -217,7 +239,7 @@ if __name__ == "__main__":
     # Ask the user if they want to see missing ingredients
     show_missing_ingredients = input("Would you like to see missing ingredients with available recipes? (yes/no): ").strip().lower() == 'yes'
     
-       # Ask the user if they want to see recipe instructions
+    # Ask the user if they want to see recipe instructions
     show_instructions = input("Would you like to see recipe instructions? (yes/no): ").strip().lower() == 'yes'
     
     # Ask the user if they want to see the nutrition facts
@@ -237,4 +259,7 @@ if __name__ == "__main__":
     if display_saved_option == 'yes':
         display_saved_recipes()
 
-
+    # Ask if the user wants to export saved recipes to a CSV file
+    export_csv_option = input("Would you like to export your saved recipes to a CSV file? (yes/no): ").strip().lower()
+    if export_csv_option == 'yes':
+        export_saved_recipes_to_csv()

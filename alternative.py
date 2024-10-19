@@ -12,7 +12,7 @@ import pytesseract
 from PIL import Image
 
 # Your Spoonacular API key
-API_KEY = "9d85a62254ac4052b9ff54e5d8425688"
+API_KEY = "1e489973c24e437b92a3571cb5ef0e18"
 
 # File to store saved recipes
 SAVED_RECIPES_FILE = "saved_recipes.json"
@@ -47,16 +47,29 @@ def parse_ingredient(ingredient):
     name = match.group(2).strip() if match.group(2) else ingredient
     return quantity, name
 
-# Function to fetch a single recipe based on ingredients (ignoring quantities)
-def get_recipe(ingredients):
+# Function to fetch recipes based on ingredients (ignoring quantities)
+# Function to fetch recipes based on ingredients (and filter by missing ingredients if desired)
+def get_recipe(ingredients, show_missing_ingredients):
     cleaned_ingredients = [parse_ingredient(ingredient)[1] for ingredient in ingredients]
+    
+    # Fetch recipes based on the ingredients provided
     url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={', '.join(cleaned_ingredients)}&number=1&apiKey={API_KEY}"
     response = requests.get(url)
     
     if response.status_code == 200:
-        return response.json()
+        recipes = response.json()
+        
+        if not show_missing_ingredients:
+            # Filter to only include recipes that use the ingredients the user has
+            recipes = [recipe for recipe in recipes if not recipe['missedIngredients']]
+        
+        # Add the recipe link to each recipe in the results
+        for recipe in recipes:
+            recipe['link'] = f"https://spoonacular.com/recipes/{recipe['title'].replace(' ', '-').lower()}-{recipe['id']}"
+        
+        return recipes  # Return the filtered recipes with links
     else:
-        print(f"Failed to fetch recipe. Status code: {response.status_code}")
+        print(f"Failed to fetch recipes. Status code: {response.status_code}")
         return None
 
 
@@ -80,12 +93,15 @@ def get_ingredient_price(ingredient_id):
 def get_recipe_details(recipe_id):
     url = f"https://api.spoonacular.com/recipes/{recipe_id}/information?includeNutrition=true&apiKey={API_KEY}"
     response = requests.get(url)
-    
+
     if response.status_code == 200:
-        return response.json()
+        recipe_info = response.json()
+        recipe_info['link'] = f"https://spoonacular.com/recipes/{recipe_id}"  # Add the link to the recipe
+        return recipe_info
     else:
         print(f"Failed to fetch recipe details. Status code: {response.status_code}")
         return None
+
 
 # Function to display nutrition facts
 def display_nutrition(nutrition):
@@ -112,14 +128,19 @@ def display_saved_recipes():
         print("No saved recipes found.")
 
 # Function to display the recipe information
+# Function to display the recipe information
+# Function to display the recipe information
 def display_recipes(recipes, show_missing_ingredients, show_nutrition, show_instructions, show_prices):
-    if recipes:
-        for recipe in recipes:
-            print(f"Recipe Title: {recipe['title']}")
-            print(f"Used Ingredients: {[ingredient['name'] for ingredient in recipe['usedIngredients']]}")
-            
-            if show_missing_ingredients:
-                missing_ingredients = recipe['missedIngredients']
+    if recipes and len(recipes) > 0:  # Check if there's at least one recipe
+        recipe = recipes[0]  # Get the first recipe only
+        print(f"Recipe Title: {recipe['title']}")
+        
+        used_ingredients = [f"{ingredient['amount']} {ingredient['unit']} {ingredient['name']}" for ingredient in recipe['usedIngredients']]
+        print(f"Used Ingredients: {used_ingredients}")
+        
+        if show_missing_ingredients:
+            missing_ingredients = recipe['missedIngredients']
+            if missing_ingredients:
                 print(f"Missing Ingredients: {[ingredient['name'] for ingredient in missing_ingredients]}")
                 
                 if show_prices:
@@ -130,29 +151,31 @@ def display_recipes(recipes, show_missing_ingredients, show_nutrition, show_inst
                             print(f"Ingredient: {ingredient['name']} - Estimated Price: ${ingredient_price / 100:.2f}")
                         else:
                             print(f"Ingredient: {ingredient['name']} - Price not available")
-            
-            if show_instructions:
-                instructions = get_recipe_details(recipe['id']).get('instructions', 'No instructions available.')
-                print(f"Instructions: {instructions}")
-            
-            if show_nutrition:
-                recipe_details = get_recipe_details(recipe['id'])
-                if recipe_details:
-                    display_nutrition(recipe_details['nutrition'])
+            else:
+                print("No missing ingredients for this recipe.")
+        
+        if show_instructions:
+            instructions = get_recipe_details(recipe['id']).get('instructions', 'No instructions available.')
+            print(f"Instructions: {instructions}")
+        
+        if show_nutrition:
+            recipe_details = get_recipe_details(recipe['id'])
+            if recipe_details:
+                display_nutrition(recipe_details['nutrition'])
 
-            print(f"Recipe Link: https://spoonacular.com/recipes/{recipe['id']}")
-            print('-' * 40)
-            
-            # Ask the user if they want to save the recipe
-            save_option = input(f"Do you want to save the recipe '{recipe['title']}'? (yes/no): ").strip().lower()
-            if save_option == 'yes':
-                recipe_to_save = {
-                    'title': recipe['title'],
-                    'link': f"https://spoonacular.com/recipes/{recipe['id']}",
-                    'used_ingredients': [ingredient['name'] for ingredient in recipe['usedIngredients']],
-                    'missing_ingredients': [ingredient['name'] for ingredient in recipe['missedIngredients']]
-                }
-                save_recipe(recipe_to_save)
+        print(f"Recipe Link: https://spoonacular.com/recipes/{recipe['id']}")
+        print('-' * 40)
+        
+        # Ask the user if they want to save the recipe
+        save_option = input(f"Do you want to save the recipe '{recipe['title']}'? (yes/no): ").strip().lower()
+        if save_option == 'yes':
+            recipe_to_save = {
+                'title': recipe['title'],
+                'link': f"https://spoonacular.com/recipes/{recipe['id']}",
+                'used_ingredients': used_ingredients,
+                'missing_ingredients': [ingredient['name'] for ingredient in missing_ingredients]
+            }
+            save_recipe(recipe_to_save)
     else:
         print("No recipes found.")
 

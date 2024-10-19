@@ -136,4 +136,4 @@ with st.expander("Show Additional Features"):
     show_nutrition = st.checkbox("Show Nutrition Facts", value=True)
     show_prices = st.checkbox("Show Prices", value=True)
     show_missing_item_prices = st.checkbox("Show Missing Item Prices", value=True)
->>>>>>> c3621f6c56cba035be6be6c910308f6ceff9e428
+

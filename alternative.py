@@ -49,7 +49,7 @@ def parse_ingredient(ingredient):
 # Function to fetch recipes based on ingredients (ignoring quantities)
 def get_recipes(ingredients):
     cleaned_ingredients = [parse_ingredient(ingredient)[1] for ingredient in ingredients]
-    url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={', '.join(cleaned_ingredients)}&number=5&apiKey=9d85a62254ac4052b9ff54e5d8425688"
+    url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={', '.join(cleaned_ingredients)}&number=5&apiKey={API_KEY}"
     response = requests.get(url)
     
     if response.status_code == 200:
@@ -58,20 +58,9 @@ def get_recipes(ingredients):
         print(f"Failed to fetch recipes. Status code: {response.status_code}")
         return None
 
-# Function to fetch recipe details, including instructions and nutrition
-def get_recipe_details(recipe_id):
-    url = f"https://api.spoonacular.com/recipes/{recipe_id}/information?includeNutrition=true&apiKey=9d85a62254ac4052b9ff54e5d8425688"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Failed to fetch recipe details. Status code: {response.status_code}")
-        return None
-
 # Function to fetch ingredient price based on ingredient ID
 def get_ingredient_price(ingredient_id):
-    url = f"https://api.spoonacular.com/food/ingredients/{ingredient_id}/information?apiKey=9d85a62254ac4052b9ff54e5d8425688"
+    url = f"https://api.spoonacular.com/food/ingredients/{ingredient_id}/information?apiKey={API_KEY}"
     response = requests.get(url)
     
     if response.status_code == 200:
@@ -85,21 +74,28 @@ def get_ingredient_price(ingredient_id):
         print(f"Failed to fetch ingredient price. Status code: {response.status_code}")
         return None
 
-# Function to save a recipe to a JSON file
-def save_recipe(recipe):
-    if not os.path.exists(SAVED_RECIPES_FILE):
-        with open(SAVED_RECIPES_FILE, 'w') as file:
-            json.dump([], file)  # Initialize with an empty list if file doesn't exist
+# Function to fetch recipe details, including instructions and nutrition
+def get_recipe_details(recipe_id):
+    url = f"https://api.spoonacular.com/recipes/{recipe_id}/information?includeNutrition=true&apiKey={API_KEY}"
+    response = requests.get(url)
     
-    with open(SAVED_RECIPES_FILE, 'r+') as file:
-        recipes = json.load(file)
-        recipes.append(recipe)
-        file.seek(0)
-        json.dump(recipes, file, indent=4)
-    
-    print(f"Recipe '{recipe['title']}' has been saved.")
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Failed to fetch recipe details. Status code: {response.status_code}")
+        return None
 
-# Function to display previously saved recipes
+# Function to display nutrition facts
+def display_nutrition(nutrition):
+    if nutrition:
+        nutrients = nutrition['nutrients']
+        print("Nutrition Facts:")
+        for nutrient in nutrients:
+            print(f"{nutrient['name']}: {nutrient['amount']} {nutrient['unit']}")
+    else:
+        print("No nutrition information available.")
+
+# Function to display saved recipes
 def display_saved_recipes():
     if os.path.exists(SAVED_RECIPES_FILE):
         with open(SAVED_RECIPES_FILE, 'r') as file:
@@ -112,32 +108,6 @@ def display_saved_recipes():
                 print("No recipes saved yet.")
     else:
         print("No saved recipes found.")
-
-# Function to analyze an image and detect ingredients using Spoonacular API
-def analyze_image(image_path):
-    url = f"https://api.spoonacular.com/food/images/analyze?apiKey=9d85a62254ac4052b9ff54e5d8425688"
-    
-    with open(image_path, 'rb') as image_file:
-        files = {'file': image_file}
-        response = requests.post(url, files=files)
-    
-    if response.status_code == 200:
-        data = response.json()
-        ingredients = data.get('category', {}).get('name', 'Unknown')
-        return ingredients
-    else:
-        print(f"Failed to analyze the image. Status code: {response.status_code}")
-        return None
-
-# Function to use Tesseract OCR for extracting text from an image (receipt)
-def extract_text_from_image(image_path):
-    try:
-        img = Image.open(image_path)
-        text = pytesseract.image_to_string(img)
-        return text
-    except Exception as e:
-        print(f"Error extracting text from image: {e}")
-        return None
 
 # Function to display the recipe information
 def display_recipes(recipes, show_missing_ingredients, show_nutrition, show_instructions, show_prices):
@@ -184,6 +154,20 @@ def display_recipes(recipes, show_missing_ingredients, show_nutrition, show_inst
     else:
         print("No recipes found.")
 
+# Function to save a recipe to a JSON file
+def save_recipe(recipe):
+    if not os.path.exists(SAVED_RECIPES_FILE):
+        with open(SAVED_RECIPES_FILE, 'w') as file:
+            json.dump([], file)  # Initialize with an empty list if file doesn't exist
+    
+    with open(SAVED_RECIPES_FILE, 'r+') as file:
+        recipes = json.load(file)
+        recipes.append(recipe)
+        file.seek(0)
+        json.dump(recipes, file, indent=4)
+    
+    print(f"Recipe '{recipe['title']}' has been saved.")
+
 # Main program logic
 if __name__ == "__main__":
     # Ask if the user wants to clear the ingredients file
@@ -222,6 +206,16 @@ if __name__ == "__main__":
             if detected_ingredients:
                 print(f"Detected Ingredients: {detected_ingredients}")
                 user_ingredients = [detected_ingredients]
-    
+
     # Add new ingredients to the file
-    add_ingredients_to_list
+    add_ingredients_to_list(user_ingredients)
+
+    # Ask the user if they want to see missing ingredients
+    show_missing_ingredients = input("Would you like to see missing ingredients with available recipes? (yes/no): ").strip().lower() == 'yes'
+    
+    # Ask the user if they want to see recipe instructions
+    show_instructions = input("Would you like to see recipe instructions? (yes/no): ").strip().lower() == 'yes'
+    
+    # Ask the user if they want to see the nutrition facts
+    show_nutrition = input("Would you like to see nutrition facts for each recipe? (yes/no): ").strip().lower() == 'yes'
+    

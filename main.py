@@ -35,6 +35,10 @@ def add_ingredient():
         st.session_state['ingredient_key'] += 1
         st.session_state['amount_key'] += 1
 
+        # Display confirmation message
+        st.write("Ingredients added to the list.")  # This displays the confirmation message after adding ingredients
+
+
 # Function to clear all ingredients
 def clear_ingredients():
     st.session_state['ingredients'] = []  # Reset the ingredients list
@@ -123,9 +127,55 @@ with st.form("ingredient_form", clear_on_submit=True):
     # Submit button within the form triggers "Enter" key
     submitted = st.form_submit_button("Add Ingredients", on_click=submit_ingredient_form)
 
+# Dropdown for additional options (checkboxes)
+with st.expander("Select Additional Features"):
+    show_missing_ingredients = st.checkbox("Show missing ingredients with available recipes")
+    show_instructions = st.checkbox("Show recipe instructions")
+    show_nutrition = st.checkbox("Show nutrition facts")
+    show_prices = st.checkbox("Show estimated prices for the missing ingredients")
+
+
 # Upload Photo button
 if st.button("Upload Photo"):
     st.session_state['show_uploader'] = True  # Show the file uploader when the button is clicked
+
+
+# Function to detect ingredients from a receipt image using Spoonacular API
+def detect_ingredients_from_receipt(image):
+    api_url = f"https://api.spoonacular.com/food/products/detect?apiKey={spoonacular_api_key}"  # Spoonacular endpoint for detecting from receipts
+    response = requests.post(api_url, files={"file": image})
+    
+    if response.status_code == 200:
+        # Extract ingredient names from the detected products
+        products = response.json().get("products", [])
+        return [product['title'] for product in products]
+    return []
+
+# Upload Photo button
+if st.button("Upload Receipt"):
+    st.session_state['show_uploader'] = True  # Show the file uploader when the button is clicked
+
+# Display file uploader and process the image without showing it
+if st.session_state['show_uploader']:
+    uploaded_image = st.file_uploader("Upload an image of a receipt", type=["jpg", "png", "jpeg"])
+
+    if uploaded_image:
+        img_bytes = io.BytesIO()
+        image = Image.open(uploaded_image)
+        image.save(img_bytes, format="PNG")
+        img_bytes.seek(0)
+
+        # Call the Spoonacular API to detect ingredients from the receipt
+        detected_ingredients = detect_ingredients_from_receipt(img_bytes)
+
+        if detected_ingredients:
+            st.write(f"Detected Ingredients: {', '.join(detected_ingredients)}")
+            # Optionally add detected ingredients to the ingredients list
+            st.session_state['ingredients'].extend(detected_ingredients)
+            st.write("Ingredients from receipt added to the list.")
+        else:
+            st.write("No ingredients detected from the receipt.")
+
 
 # Display file uploader and process the image without showing it
 if st.session_state['show_uploader']:
@@ -144,6 +194,8 @@ if st.session_state['show_uploader']:
         # Optional: Allow the user to add the detected ingredient
         if st.button("Add Detected Ingredient"):
             st.session_state['ingredients'].append(detected_ingredient)
+
+
 
 # Fetch Recipes button
 if st.button("FETCH RECIPES"):

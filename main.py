@@ -7,7 +7,7 @@ import io
 # Set the page configuration
 st.set_page_config(page_title="Recipe Finder", layout="wide")
 
-# Initialize session state for ingredients if it doesn't exist
+# Initialize session state for ingredients and dynamic keys if they don't exist
 if 'ingredients' not in st.session_state:
     st.session_state['ingredients'] = []
 if 'ingredient_key' not in st.session_state:
@@ -31,7 +31,7 @@ def add_ingredient():
         else:
             st.session_state['ingredients'].append(ingredient)
 
-        # Increment keys to reset the input fields indirectly
+        # Reset input by incrementing the dynamic key to refresh the input fields
         st.session_state['ingredient_key'] += 1
         st.session_state['amount_key'] += 1
 
@@ -66,6 +66,11 @@ def get_recipe_details(recipe_id):
         return response.json()
     return None
 
+# Function to handle form submission manually, ensuring everything works on the first click
+def submit_ingredient_form():
+    # Call add_ingredient when the form is submitted
+    add_ingredient()
+
 # Sidebar on the right
 with st.sidebar:
     st.header("Saved Recipes")
@@ -94,37 +99,33 @@ with st.sidebar:
 # Main section for input and recipe fetching
 st.header("QUICKBITE")
 
-# Two columns: one for ingredient and one for amount
-ingredient_col, amount_col = st.columns([2, 1])
+# Use a form to handle submission only when Enter is pressed, not when clicking outside
+with st.form("ingredient_form", clear_on_submit=True):
+    # Two columns: one for ingredient and one for amount
+    ingredient_col, amount_col = st.columns([2, 1])
 
-# Ingredient input field with dynamic key to reset on each addition
-with ingredient_col:
-    st.text_input(
-        "Enter your ingredient",
-        placeholder="e.g. chicken, rice",
-        key=f'ingredient_input_{st.session_state["ingredient_key"]}'  # Dynamic key for ingredient input
-    )
+    # Ingredient input field with dynamic key to reset on each addition
+    with ingredient_col:
+        ingredient = st.text_input(
+            "Enter your ingredient",
+            placeholder="e.g. chicken, rice",
+            key=f'ingredient_input_{st.session_state["ingredient_key"]}'  # Dynamic key for ingredient input
+        )
 
-# Amount input field with dynamic key to reset on each addition
-with amount_col:
-    st.text_input(
-        "Amount (optional)",
-        placeholder="e.g. 200g, 2 cups",
-        key=f'amount_input_{st.session_state["amount_key"]}'  # Dynamic key for amount input
-    )
+    # Amount input field with dynamic key to reset on each addition
+    with amount_col:
+        amount = st.text_input(
+            "Amount (optional)",
+            placeholder="e.g. 200g, 2 cups",
+            key=f'amount_input_{st.session_state["amount_key"]}'  # Dynamic key for amount input
+        )
 
-# Two columns for the add ingredient and upload photo buttons
-col1, col2 = st.columns([1, 1])
+    # Submit button within the form triggers "Enter" key
+    submitted = st.form_submit_button("Add Ingredients", on_click=submit_ingredient_form)
 
-# Add Ingredients button in the left column
-with col1:
-    if st.button("Add Ingredients"):
-        add_ingredient()  # Call the add_ingredient function when the button is pressed
-
-# Upload Photo button in the right column (Same size as Add Ingredients)
-with col2:
-    if st.button("Upload Photo"):
-        st.session_state['show_uploader'] = True  # Show the file uploader when the button is clicked
+# Upload Photo button
+if st.button("Upload Photo"):
+    st.session_state['show_uploader'] = True  # Show the file uploader when the button is clicked
 
 # Display file uploader and process the image without showing it
 if st.session_state['show_uploader']:

@@ -41,7 +41,6 @@ if st.session_state['ingredients']:
 else:
     st.sidebar.write("No ingredients added.")
 
-
 # Fetching recipes section
 st.header("Fetch Recipes")
 if st.button("FETCH RECIPES"):
@@ -55,17 +54,29 @@ if st.button("FETCH RECIPES"):
         if recipes is None:
             st.error("Error fetching recipes. Please try again.")
         else:
-            # Display the fetched recipes
+            # Display the fetched recipes inside the square section
             st.subheader("Recipes Found:")
-            display_recipes(recipes)
+            # Create the square container
+            recipe_container = st.markdown("<div style='display: flex; justify-content: center;'><div style='width: 40vh; height: 40vh; border: 1px solid white; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 10px;'>"
+                                            "<h4>Recipes:</h4></div></div>", unsafe_allow_html=True)
 
-            # Display the recipe results
+            # Display the recipe results inside the square container
             for recipe in recipes:  # Assuming 'recipes' is a list of recipe names or details
-                st.write(recipe)  # Display each recipe
+                st.markdown(f"<div style='margin: 5px; text-align: center;'><strong>{recipe['title']}</strong></div>", unsafe_allow_html=True)  # Display each recipe
+            
+            # Optionally, you could also include more detailed recipe information here
+
     else:
         st.warning("Please add at least one ingredient to fetch recipes.")
 
+# Show checkboxes for additional options
 show_missing_ingredients = st.checkbox("Show Missing Ingredients", value=True)
 show_instructions = st.checkbox("Show Instructions", value=True)
 show_nutrition = st.checkbox("Show Nutrition Facts", value=True)
 show_prices = st.checkbox("Show Prices", value=True)
+
+# Add a square section in the middle of the page
+# You can include this again or remove it as needed
+st.markdown("<div style='display: flex; justify-content: center;'><div style='width: 60vh; height: 60vh; border: 1px solid white; display: flex; align-items: center; justify-content: center;'>"
+            "<h3>This is the middle square section</h3></div></div>", unsafe_allow_html=True)
+

@@ -6,7 +6,7 @@ API_KEY = "9d85a62254ac4052b9ff54e5d8425688"
 # Function to fetch recipes based on ingredients
 def get_recipes(ingredients):
     # Construct the API URL with the provided ingredients
-    url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={ingredients}&number=5&apiKey={API_KEY}"
+    url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={ingredients}&number=5&apiKey=9d85a62254ac4052b9ff54e5d8425688"
     
     # Make the request to Spoonacular
     response = requests.get(url)

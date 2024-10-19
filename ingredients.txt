@@ -2,3 +2,5 @@ chicken, lettuce
 rice, beans
 fish
 2 chicken breasts
+chicken, rice
+chicken, 2 cans of beans

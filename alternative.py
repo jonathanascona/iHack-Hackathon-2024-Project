@@ -192,6 +192,31 @@ def export_saved_recipes_to_csv(csv_filename="saved_recipes.csv"):
     else:
         print("No saved recipes file found.")
 
+def extract_text_from_image(image_path):
+    try:
+        # Open the image using PIL
+        image = Image.open(image_path)
+        # Use pytesseract to do OCR on the image
+        text = pytesseract.image_to_string(image)
+        return text.strip()  # Remove leading/trailing whitespace
+    except Exception as e:
+        print(f"Error extracting text from image: {e}")
+        return None
+
+def analyze_image(image_path):
+    try:
+        # Extract text from the image
+        extracted_text = extract_text_from_image(image_path)
+        if extracted_text:
+            # Split the text into lines and clean it up
+            lines = [line.strip() for line in extracted_text.split('\n') if line.strip()]
+            return lines  # Return list of detected ingredients
+        else:
+            return None
+    except Exception as e:
+        print(f"Error analyzing image: {e}")
+        return None
+
 # Main program logic
 
 if __name__ == "__main__":
@@ -222,11 +247,11 @@ if __name__ == "__main__":
         
         if image_type == "receipt":
             extracted_text = extract_text_from_image(image_path)
-            if extracted_text
-
             if extracted_text:
-                print(f"Extracted ingredients from receipt: {extracted_text}")
-                user_ingredients = extracted_text.split("\n")
+
+                if extracted_text:
+                    print(f"Extracted ingredients from receipt: {extracted_text}")
+                    user_ingredients = extracted_text.split("\n")
         
         elif image_type == "ingredients":
             detected_ingredients = analyze_image(image_path)

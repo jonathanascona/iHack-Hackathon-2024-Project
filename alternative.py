@@ -47,17 +47,18 @@ def parse_ingredient(ingredient):
     name = match.group(2).strip() if match.group(2) else ingredient
     return quantity, name
 
-# Function to fetch recipes based on ingredients (ignoring quantities)
-def get_recipes(ingredients):
+# Function to fetch a single recipe based on ingredients (ignoring quantities)
+def get_recipe(ingredients):
     cleaned_ingredients = [parse_ingredient(ingredient)[1] for ingredient in ingredients]
-    url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={', '.join(cleaned_ingredients)}&number=5&apiKey={API_KEY}"
+    url = f"https://api.spoonacular.com/recipes/findByIngredients?ingredients={', '.join(cleaned_ingredients)}&number=1&apiKey={API_KEY}"
     response = requests.get(url)
     
     if response.status_code == 200:
         return response.json()
     else:
-        print(f"Failed to fetch recipes. Status code: {response.status_code}")
+        print(f"Failed to fetch recipe. Status code: {response.status_code}")
         return None
+
 
 # Function to fetch ingredient price based on ingredient ID
 def get_ingredient_price(ingredient_id):
@@ -275,7 +276,7 @@ if __name__ == "__main__":
     show_prices = input("Would you like to see estimated prices for the missing ingredients? (yes/no): ").strip().lower() == 'yes'
 
     # Fetch the recipes based on the provided ingredients
-    recipes = get_recipes(user_ingredients)
+    recipes = get_recipe(user_ingredients)
     
     # Display the fetched recipes with or without missing ingredients, instructions, nutrition facts, and prices
     display_recipes(recipes, show_missing_ingredients, show_nutrition, show_instructions, show_prices)

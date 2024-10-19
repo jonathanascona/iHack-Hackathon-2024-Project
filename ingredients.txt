@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+rice, chicken
+=======
 rice, beans
 chicken
 banana
+>>>>>>> 8a14846bf99c34d35050278a79f8e7c5b039a532

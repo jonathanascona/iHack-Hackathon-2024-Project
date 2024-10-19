@@ -96,8 +96,10 @@ if st.button("FETCH RECIPES"):
     else:
         st.warning("Please add at least one ingredient to fetch recipes.")
 
-# Show checkboxes for additional options
-show_missing_ingredients = st.checkbox("Show Missing Ingredients", value=True)
-show_instructions = st.checkbox("Show Instructions", value=True)
-show_nutrition = st.checkbox("Show Nutrition Facts", value=True)
-show_prices = st.checkbox("Show Prices", value=True)
+with st.expander("Show Additional Features"):
+    show_missing_ingredients = st.checkbox("Show Missing Ingredients", value=True)
+    show_instructions = st.checkbox("Show Instructions", value=True)
+    show_nutrition = st.checkbox("Show Nutrition Facts", value=True)
+    show_prices = st.checkbox("Show Prices", value=True)
+    show_missing_item_prices = st.checkbox("Show Missing Item Prices", value=True)
+>>>>>>> c3621f6c56cba035be6be6c910308f6ceff9e428

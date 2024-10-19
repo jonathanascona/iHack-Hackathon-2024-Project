@@ -10,20 +10,20 @@ st.set_page_config(page_title="Recipe Finder", layout="wide")
 # Initialize session state for ingredients if it doesn't exist
 if 'ingredients' not in st.session_state:
     st.session_state['ingredients'] = []
+if 'ingredient_key' not in st.session_state:
+    st.session_state['ingredient_key'] = 0  # Dynamic key for ingredient input
+if 'amount_key' not in st.session_state:
+    st.session_state['amount_key'] = 0  # Dynamic key for amount input
 if 'show_uploader' not in st.session_state:
     st.session_state['show_uploader'] = False  # Flag to toggle uploader visibility
-if 'ingredient_input' not in st.session_state:
-    st.session_state['ingredient_input'] = ""  # Store ingredient input in session state
-if 'ingredient_amount' not in st.session_state:
-    st.session_state['ingredient_amount'] = ""  # Store amount input in session state
 
 # Spoonacular API Key (replace 'your_api_key' with your actual API key)
 spoonacular_api_key = "your_api_key"
 
 # Function to add an ingredient and reset input
 def add_ingredient():
-    ingredient = st.session_state['ingredient_input']
-    amount = st.session_state['ingredient_amount']
+    ingredient = st.session_state.get(f'ingredient_input_{st.session_state["ingredient_key"]}', '')
+    amount = st.session_state.get(f'amount_input_{st.session_state["amount_key"]}', '')
     
     if ingredient:  # Only add if the input is not empty
         if amount:
@@ -31,9 +31,9 @@ def add_ingredient():
         else:
             st.session_state['ingredients'].append(ingredient)
 
-        # Reset input fields
-        st.session_state['ingredient_input'] = ""
-        st.session_state['ingredient_amount'] = ""
+        # Increment keys to reset the input fields indirectly
+        st.session_state['ingredient_key'] += 1
+        st.session_state['amount_key'] += 1
 
 # Function to clear all ingredients
 def clear_ingredients():
@@ -97,20 +97,20 @@ st.header("QUICKBITE")
 # Two columns: one for ingredient and one for amount
 ingredient_col, amount_col = st.columns([2, 1])
 
-# Ingredient input field with fixed key
+# Ingredient input field with dynamic key to reset on each addition
 with ingredient_col:
     st.text_input(
         "Enter your ingredient",
         placeholder="e.g. chicken, rice",
-        key='ingredient_input'  # Fixed key for ingredient input
+        key=f'ingredient_input_{st.session_state["ingredient_key"]}'  # Dynamic key for ingredient input
     )
 
-# Amount input field with fixed key
+# Amount input field with dynamic key to reset on each addition
 with amount_col:
     st.text_input(
         "Amount (optional)",
         placeholder="e.g. 200g, 2 cups",
-        key='ingredient_amount'  # Fixed key for amount input
+        key=f'amount_input_{st.session_state["amount_key"]}'  # Dynamic key for amount input
     )
 
 # Two columns for the add ingredient and upload photo buttons

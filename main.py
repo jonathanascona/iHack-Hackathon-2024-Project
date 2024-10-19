@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
-from alternative import get_recipe, display_recipes, get_recipe_details  # Import your functions
+from PIL import Image
+import requests
+import io
+import base64
 
 # Set the page configuration
 st.set_page_config(page_title="Recipe Finder", layout="wide")
@@ -14,20 +17,13 @@ if 'ingredient_amount' not in st.session_state:
     st.session_state['ingredient_amount'] = ""
 if 'input_cleared' not in st.session_state:
     st.session_state['input_cleared'] = False  # Flag to manage input clearing
+if 'show_uploader' not in st.session_state:
+    st.session_state['show_uploader'] = False  # Flag to toggle uploader visibility
 
-# Sample saved recipes list (you can replace this with actual recipe data)
-saved_recipes = [
-    {"Recipe Name": "Spaghetti Bolognese", "Ingredients": "Pasta, Beef, Tomato Sauce", "Cooking Time": "30 min"},
-    {"Recipe Name": "Chicken Curry", "Ingredients": "Chicken, Curry Paste, Coconut Milk", "Cooking Time": "45 min"},
-    {"Recipe Name": "Pancakes", "Ingredients": "Flour, Eggs, Milk", "Cooking Time": "15 min"}
-]
+# Spoonacular API Key (replace 'your_api_key' with your actual API key)
+spoonacular_api_key = "your_api_key"
 
-# Function to convert the saved recipes into a CSV format
-def convert_to_csv(data):
-    df = pd.DataFrame(data)  # Convert list of recipes into a DataFrame
-    return df.to_csv(index=False)
-
-# Function to add an ingredient and reset input indirectly
+# Function to add an ingredient and reset input
 def add_ingredient():
     if st.session_state['ingredient_input']:  # Only add if the input is not empty
         ingredient = st.session_state['ingredient_input']
@@ -39,15 +35,25 @@ def add_ingredient():
         else:
             st.session_state['ingredients'].append(ingredient)
         
-        # Clear inputs by using st.session_state.update() without directly modifying widget state
+        # Clear inputs safely
         st.session_state.update({
-            'ingredient_input': "",  # Reset ingredient input safely
-            'ingredient_amount': ""  # Reset amount input safely
+            'ingredient_input': "",  # Reset ingredient input
+            'ingredient_amount': ""  # Reset amount input
         })
 
 # Function to clear all ingredients
 def clear_ingredients():
     st.session_state['ingredients'] = []  # Reset the ingredients list
+
+# Function to detect the ingredient from an uploaded image using Spoonacular API
+def detect_ingredient(image):
+    api_url = f"https://api.spoonacular.com/food/images/analyze?apiKey={spoonacular_api_key}"
+    response = requests.post(api_url, files={"file": image})
+    
+    if response.status_code == 200:
+        # Assuming the API returns 'category' or similar as the detected ingredient
+        return response.json().get("category", "Unknown ingredient")
+    return "Error detecting ingredient"
 
 # Sidebar on the right
 with st.sidebar:
@@ -55,7 +61,7 @@ with st.sidebar:
     with st.expander("View Saved Recipes"):
         # Button to export saved recipes to a CSV file
         if st.button("Export to CSV"):
-            csv = convert_to_csv(saved_recipes)
+            csv = pd.DataFrame(st.session_state['ingredients']).to_csv(index=False)
             st.download_button(
                 label="Download CSV",
                 data=csv,
@@ -75,7 +81,7 @@ with st.sidebar:
         st.write("No ingredients added.")
 
 # Main section for input and recipe fetching
-st.header("Quick Bite")
+st.header("QUICKBITE")
 
 # Two columns: one for ingredient and one for amount
 ingredient_col, amount_col = st.columns([2, 1])
@@ -94,7 +100,7 @@ with amount_col:
         key='ingredient_amount'
     )
 
-# Two columns for the add ingredient and fetch recipes buttons
+# Two columns for the add ingredient and upload photo buttons
 col1, col2 = st.columns([1, 1])
 
 # Add Ingredients button in the left column
@@ -102,92 +108,72 @@ with col1:
     if st.button("Add Ingredients"):
         add_ingredient()  # Call the add_ingredient function when the button is pressed
 
-# Fetch Recipes button in the right column
+# Upload Photo button in the right column (Same size as Add Ingredients)
 with col2:
-    if st.button("FETCH RECIPES"):
-        if st.session_state['ingredients']:
-            user_ingredients = ", ".join(st.session_state['ingredients'])
-            st.header("Recipes Based on Your Ingredients")
+    if st.button("Upload Photo"):
+        st.session_state['show_uploader'] = True  # Show the file uploader when the button is clicked
 
-            # Fetch the recipes based on the provided ingredients
-            recipes = get_recipe(user_ingredients)
+# Display file uploader and process the image without showing it
+if st.session_state['show_uploader']:
+    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
-            # Check if recipes is None and handle the error
-            if recipes is None:
-                st.error("Error fetching recipes. Please try again.")
-            else:
-                st.subheader("Recipes Found:")
+    if uploaded_image:
+        # Convert the image to bytes and detect the ingredient without displaying it
+        img_bytes = io.BytesIO()
+        image = Image.open(uploaded_image)
+        image.save(img_bytes, format="PNG")
+        img_bytes.seek(0)
 
-                # Display the recipe results inside the square container
-                for recipe in recipes:  # Assuming 'recipes' is a list of recipe details
-                    st.markdown(f"<div style='margin: 5px; text-align: left;'><strong>{recipe['title']}</strong></div>", unsafe_allow_html=True)
+        # Call the backend API or detection function
+        detected_ingredient = detect_ingredient(img_bytes)
+        st.write(f"Detected Ingredient: **{detected_ingredient}**")
 
-                    # Fetch and display detailed recipe information
-                    recipe_details = get_recipe_details(recipe['id'])  # Fetch detailed recipe information
-                    if recipe_details:
-                        # Display cooking instructions
-                        instructions = recipe_details.get('instructions', 'No instructions available.')
-                        st.markdown(f"<p><strong>Instructions:</strong> {instructions}</p>", unsafe_allow_html=True)
+        # Optional: Allow the user to add the detected ingredient
+        if st.button("Add Detected Ingredient"):
+            st.session_state['ingredients'].append(detected_ingredient)
 
-                        # Display used and missing ingredients
-                        used_ingredients = [ingredient['name'] for ingredient in recipe_details['usedIngredients']]
-                        st.markdown(f"<p><strong>Used Ingredients:</strong> {', '.join(used_ingredients)}</p>", unsafe_allow_html=True)
+# Fetch Recipes button
+if st.button("FETCH RECIPES"):
+    if st.session_state['ingredients']:
+        user_ingredients = ", ".join(st.session_state['ingredients'])
+        st.header("Recipes Based on Your Ingredients")
 
-                        missing_ingredients = [ingredient['name'] for ingredient in recipe_details['missedIngredients']]
-                        st.markdown(f"<p><strong>Missing Ingredients:</strong> {', '.join(missing_ingredients)}</p>", unsafe_allow_html=True)
+        # Simulating fetching recipes based on the ingredients
+        recipes = get_recipe(user_ingredients)  # Use actual API in production
 
-                        # Display nutrition facts if available
-                        nutrition = recipe_details.get('nutrition')
-                        if nutrition:
-                            nutrients = nutrition['nutrients']
-                            nutrition_info = "\n".join(f"{nutrient['name']}: {nutrient['amount']} {nutrient['unit']}" for nutrient in nutrients)
-                            st.markdown(f"<p><strong>Nutrition Facts:</strong><br>{nutrition_info}</p>", unsafe_allow_html=True)
-
-                        # Link to the recipe
-                        st.markdown(f"[View Full Recipe](https://spoonacular.com/recipes/{recipe['id']})", unsafe_allow_html=True)
+        # Check if recipes is None and handle the error
+        if recipes is None:
+            st.error("Error fetching recipes. Please try again.")
         else:
-            st.warning("Please add at least one ingredient to fetch recipes.")
+            st.subheader("Recipes Found:")
 
-# Additional features section
-with st.expander("Show Additional Features"):
-    show_missing_ingredients = st.checkbox("Show Missing Ingredients", value=True)
-    show_instructions = st.checkbox("Show Instructions", value=True)
-    show_nutrition = st.checkbox("Show Nutrition Facts", value=True)
-    show_prices = st.checkbox("Show Prices", value=True)
-    show_missing_item_prices = st.checkbox("Show Missing Item Prices", value=True)
+            # Display the recipe results inside the square container
+            for recipe in recipes:  # Assuming 'recipes' is a list of recipe details
+                st.markdown(f"<div style='margin: 5px; text-align: left;'><strong>{recipe['title']}</strong></div>", unsafe_allow_html=True)
 
-# Footer with background image using base64 encoding
-import base64
+                # Fetch and display detailed recipe information
+                recipe_details = get_recipe_details(recipe['id'])  # Fetch detailed recipe information
+                if recipe_details:
+                    # Display cooking instructions
+                    instructions = recipe_details.get('instructions', 'No instructions available.')
+                    st.markdown(f"<p><strong>Instructions:</strong> {instructions}</p>", unsafe_allow_html=True)
 
-# Function to convert local image to base64
-def get_base64_image(image_path):
-    with open(image_path, "rb") as file:
-        data = file.read()
-    return base64.b64encode(data).decode()
+                    # Display used and missing ingredients
+                    used_ingredients = [ingredient['name'] for ingredient in recipe_details['usedIngredients']]
+                    st.markdown(f"<p><strong>Used Ingredients:</strong> {', '.join(used_ingredients)}</p>", unsafe_allow_html=True)
 
-# Local path to the image
-image_path = "C:\\Users\\jonat\\Documents\\GitHub\\ihackf24-main\\background_wallpaper.jpg"
-base64_image = get_base64_image(image_path)
+                    missing_ingredients = [ingredient['name'] for ingredient in recipe_details['missedIngredients']]
+                    st.markdown(f"<p><strong>Missing Ingredients:</strong> {', '.join(missing_ingredients)}</p>", unsafe_allow_html=True)
 
-# Footer with background image using base64 encoding
-footer_html = f"""
-    <style>
-    .footer {{
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-image: url("data:image/jpg;base64,{base64_image}");
-        background-size: cover;
-        background-repeat: no-repeat;
-        padding: 30px;
-        text-align: center;
-        color: white;
-        font-size: 16px;
-    }}
-    </style>
-    <div class="footer">
-   
-    </div>
-"""
-st.markdown(footer_html, unsafe_allow_html=True)
+                    # Display nutrition facts if available
+                    nutrition = recipe_details.get('nutrition')
+                    if nutrition:
+                        nutrients = nutrition['nutrients']
+                        nutrition_info = "\n".join(f"{nutrient['name']}: {nutrient['amount']} {nutrient['unit']}" for nutrient in nutrients)
+                        st.markdown(f"<p><strong>Nutrition Facts:</strong><br>{nutrition_info}</p>", unsafe_allow_html=True)
+
+                    # Link to the recipe
+                    st.markdown(f"[View Full Recipe](https://spoonacular.com/recipes/{recipe['id']})", unsafe_allow_html=True)
+    else:
+        st.warning("Please add at least one ingredient to fetch recipes.")
+

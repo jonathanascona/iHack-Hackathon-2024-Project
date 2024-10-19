@@ -27,10 +27,9 @@ def convert_to_csv(data):
 col1, col2 = st.columns([2, 1])
 
 # Sidebar on the right
-with col2:
-    with st.sidebar:
-        st.header("Saved Recipes")  # Sidebar header
-
+with st.sidebar:
+    st.header("Saved Recipes")
+    with st.expander("View Saved Recipes"):
         # Button to export saved recipes to a CSV file
         if st.button("Export to CSV"):
             csv = convert_to_csv(saved_recipes)
@@ -48,25 +47,9 @@ with col1:
 
     # Sidebar for ingredient input
     with st.sidebar:
-        st.header("Add Ingredients")
-
         # Button to clear all ingredients
         if st.button("Clear All Ingredients"):
             clear_ingredients()
-
-        # Function to add ingredient and reset input
-        def add_ingredient():
-            if st.session_state['ingredient_input']:  # Only add if the input is not empty
-                st.session_state['ingredients'].append(st.session_state['ingredient_input'])  # Add to the ingredients list
-                st.session_state['ingredient_input'] = ""  # Clear the input field
-
-        # Text input for ingredients, tied to session state and using on_change callback
-        st.text_input(
-            "Enter your ingredient",
-            placeholder="e.g. chicken, rice",
-            key='ingredient_input',
-            on_change=add_ingredient  # This will be triggered when input changes or the "Enter" key is pressed
-        )
 
         # Display the list of ingredients
         st.header("Current Ingredients")
@@ -81,6 +64,22 @@ st.header("Quick Bite")
 if st.button("FETCH RECIPES"):
     if st.session_state['ingredients']:
         user_ingredients = ", ".join(st.session_state['ingredients'])
+
+        st.header("Add Ingredients")
+
+        # Function to add ingredient and reset input
+        def add_ingredient():
+            if st.session_state['ingredient_input']:  # Only add if the input is not empty
+                st.session_state['ingredients'].append(st.session_state['ingredient_input'])  # Add to the ingredients list
+                st.session_state['ingredient_input'] = ""  # Clear the input field
+
+        # Text input for ingredients, tied to session state and using on_change callback
+        st.text_input(
+            "Enter your ingredient",
+            placeholder="e.g. chicken, rice",
+            key='ingredient_input',
+            on_change=add_ingredient  # This will be triggered when input changes or the "Enter" key is pressed
+        )
         
         # Fetch the recipes based on the provided ingredients
         recipes = get_recipe(user_ingredients)

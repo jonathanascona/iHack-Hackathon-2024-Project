@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd 
-from alternative import get_recipes, display_recipes, get_recipe_details  # Import your functions
+from alternative import get_recipe, display_recipes, get_recipe_details  # Import your functions
 
 # Set the page configuration
 st.set_page_config(page_title="Recipe Finder", layout="wide")
@@ -80,7 +80,7 @@ if st.button("FETCH RECIPES"):
         user_ingredients = ", ".join(st.session_state['ingredients'])
         
         # Fetch the recipes based on the provided ingredients
-        recipes = get_recipes(user_ingredients)
+        recipes = get_recipe(user_ingredients)
 
         # Check if recipes is None and handle the error
         if recipes is None:

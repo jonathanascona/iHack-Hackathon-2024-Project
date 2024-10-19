@@ -193,6 +193,7 @@ def export_saved_recipes_to_csv(csv_filename="saved_recipes.csv"):
         print("No saved recipes file found.")
 
 # Main program logic
+
 if __name__ == "__main__":
     # Ask if the user wants to clear the ingredients file
     clear_file = input("Would you like to clear all previously entered ingredients? (yes/no): ").strip().lower()

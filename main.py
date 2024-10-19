@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd 
-from alternative import get_recipes, display_recipes  # Import your functions
+from alternative import get_recipes, display_recipes, get_recipe_details  # Import your functions
 
 # Set the page configuration
 st.set_page_config(page_title="Recipe Finder", layout="wide")
@@ -83,15 +83,44 @@ if st.button("FETCH RECIPES"):
         else:
             # Display the fetched recipes inside the square section
             st.subheader("Recipes Found:")
-            # Create the square container
-            recipe_container = st.markdown("<div style='display: flex; justify-content: center;'><div style='width: 40vh; height: 40vh; border: 1px solid white; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 10px;'>"
-                                            "<h4>Recipes:</h4></div></div>", unsafe_allow_html=True)
+
+            # Create the square container aligned to the left
+            recipe_container = st.markdown("""
+            <div style='display: flex; justify-content: flex-start;'>
+                <div style='width: 40vh; height: 40vh; border: 1px solid white; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding: 10px;'>
+                    <h4 style='margin: 0;'>Recipes:</h4>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
             # Display the recipe results inside the square container
-            for recipe in recipes:  # Assuming 'recipes' is a list of recipe names or details
-                st.markdown(f"<div style='margin: 5px; text-align: center;'><strong>{recipe['title']}</strong></div>", unsafe_allow_html=True)  # Display each recipe
-            
-            # Optionally, you could also include more detailed recipe information here
+            for recipe in recipes:  # Assuming 'recipes' is a list of recipe details
+                # Display basic recipe information
+                st.markdown(f"<div style='margin: 5px; text-align: left;'><strong>{recipe['title']}</strong></div>", unsafe_allow_html=True)
+
+                # Fetch and display detailed recipe information
+                recipe_details = get_recipe_details(recipe['id'])  # Fetch detailed recipe information
+                if recipe_details:
+                    # Display cooking instructions
+                    instructions = recipe_details.get('instructions', 'No instructions available.')
+                    st.markdown(f"<p><strong>Instructions:</strong> {instructions}</p>", unsafe_allow_html=True)
+                    
+                    # Display used and missing ingredients
+                    used_ingredients = [ingredient['name'] for ingredient in recipe['usedIngredients']]
+                    st.markdown(f"<p><strong>Used Ingredients:</strong> {', '.join(used_ingredients)}</p>", unsafe_allow_html=True)
+
+                    missing_ingredients = [ingredient['name'] for ingredient in recipe['missedIngredients']]
+                    st.markdown(f"<p><strong>Missing Ingredients:</strong> {', '.join(missing_ingredients)}</p>", unsafe_allow_html=True)
+                    
+                    # Display nutrition facts if available
+                    nutrition = recipe_details.get('nutrition')
+                    if nutrition:
+                        nutrients = nutrition['nutrients']
+                        nutrition_info = "\n".join(f"{nutrient['name']}: {nutrient['amount']} {nutrient['unit']}" for nutrient in nutrients)
+                        st.markdown(f"<p><strong>Nutrition Facts:</strong><br>{nutrition_info}</p>", unsafe_allow_html=True)
+
+                    # Link to the recipe
+                    st.markdown(f"[View Full Recipe](https://spoonacular.com/recipes/{recipe['id']})", unsafe_allow_html=True)
 
     else:
         st.warning("Please add at least one ingredient to fetch recipes.")
@@ -102,4 +131,11 @@ with st.expander("Show Additional Features"):
     show_nutrition = st.checkbox("Show Nutrition Facts", value=True)
     show_prices = st.checkbox("Show Prices", value=True)
     show_missing_item_prices = st.checkbox("Show Missing Item Prices", value=True)
->>>>>>> c3621f6c56cba035be6be6c910308f6ceff9e428
+
+recipe_container = st.markdown("""
+            <div style='display: flex; justify-content: flex-start;'>
+                <div style='width: 40vh; height: 40vh; border: 1px solid white; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding: 10px;'>
+                    <h4 style='margin: 0;'>Recipes:</h4>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)

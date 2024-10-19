@@ -122,6 +122,7 @@ def display_recipes(recipes, show_missing_ingredients, show_nutrition, show_inst
         print("No recipes found.")
 
 # Main program logic
+
 if __name__ == "__main__":
     # Prompt the user for ingredients (comma-separated)
     user_ingredients = input("Enter ingredients (comma-separated): ").strip()

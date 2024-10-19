@@ -217,8 +217,8 @@ def analyze_image(image_path):
         print(f"Error analyzing image: {e}")
         return None
 
-# Main program logic
 
+# Main program logic
 if __name__ == "__main__":
     # Ask if the user wants to clear the ingredients file
     clear_file = input("Would you like to clear all previously entered ingredients? (yes/no): ").strip().lower()

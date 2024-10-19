@@ -3,6 +3,10 @@
 # 10/18/24 - 10/19/24)
 
 
+# HACKATHON FALL SEMESTER 2024 #
+# DYLAN KOHN, JONATHAN NELSON, JONATHAN ASCONA #
+# 10/18/24 - 10/19/24 #
+
 import requests
 import json
 import os
@@ -213,9 +217,24 @@ if __name__ == "__main__":
     # Ask the user if they want to see missing ingredients
     show_missing_ingredients = input("Would you like to see missing ingredients with available recipes? (yes/no): ").strip().lower() == 'yes'
     
-    # Ask the user if they want to see recipe instructions
+       # Ask the user if they want to see recipe instructions
     show_instructions = input("Would you like to see recipe instructions? (yes/no): ").strip().lower() == 'yes'
     
     # Ask the user if they want to see the nutrition facts
     show_nutrition = input("Would you like to see nutrition facts for each recipe? (yes/no): ").strip().lower() == 'yes'
     
+    # Ask the user if they want to see ingredient prices (for missing ingredients only)
+    show_prices = input("Would you like to see estimated prices for the missing ingredients? (yes/no): ").strip().lower() == 'yes'
+
+    # Fetch the recipes based on the provided ingredients
+    recipes = get_recipes(user_ingredients)
+    
+    # Display the fetched recipes with or without missing ingredients, instructions, nutrition facts, and prices
+    display_recipes(recipes, show_missing_ingredients, show_nutrition, show_instructions, show_prices)
+    
+    # Ask if the user wants to display previously saved recipes
+    display_saved_option = input("Would you like to see your saved recipes? (yes/no): ").strip().lower()
+    if display_saved_option == 'yes':
+        display_saved_recipes()
+
+

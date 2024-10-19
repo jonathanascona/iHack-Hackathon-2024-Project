@@ -18,7 +18,7 @@ if 'show_uploader' not in st.session_state:
     st.session_state['show_uploader'] = False  # Flag to toggle uploader visibility
 
 # Spoonacular API Key (replace 'your_api_key' with your actual API key)
-spoonacular_api_key = "your_api_key"
+spoonacular_api_key = "1e489973c24e437b92a3571cb5ef0e18"
 
 # Function to add an ingredient and reset input
 def add_ingredient():

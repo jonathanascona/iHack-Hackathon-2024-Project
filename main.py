@@ -23,6 +23,7 @@ def convert_to_csv(data):
     df = pd.DataFrame(data)  # Convert list of recipes into a DataFrame
     return df.to_csv(index=False)
 
+# Layout
 col1, col2 = st.columns([2, 1])
 
 # Sidebar on the right
@@ -30,7 +31,7 @@ with col2:
     with st.sidebar:
         st.header("Saved Recipes")  # Sidebar header
 
-     # Button to export saved recipes to a CSV file
+        # Button to export saved recipes to a CSV file
         if st.button("Export to CSV"):
             csv = convert_to_csv(saved_recipes)
             st.download_button(
@@ -38,40 +39,42 @@ with col2:
                 data=csv,
                 file_name='saved_recipes.csv',
                 mime='text/csv'
-        )
+            )
 
-
+# Left column for ingredient input and recipe fetching
 with col1:
     def clear_ingredients():
         st.session_state['ingredients'] = []  # Reset the ingredients list
 
     # Sidebar for ingredient input
-    st.sidebar.header("Add Ingredients")
+    with st.sidebar:
+        st.header("Add Ingredients")
 
-    if st.sidebar.button("Clear All Ingredients"):
-        clear_ingredients()
+        # Button to clear all ingredients
+        if st.button("Clear All Ingredients"):
+            clear_ingredients()
 
-    # Function to add ingredient and reset input
-    def add_ingredient():
-        if st.session_state['ingredient_input']:  # Only add if the input is not empty
-            st.session_state['ingredients'].append(st.session_state['ingredient_input'])  # Add to the ingredients list
-            st.session_state['ingredient_input'] = ""  # Clear the input field
+        # Function to add ingredient and reset input
+        def add_ingredient():
+            if st.session_state['ingredient_input']:  # Only add if the input is not empty
+                st.session_state['ingredients'].append(st.session_state['ingredient_input'])  # Add to the ingredients list
+                st.session_state['ingredient_input'] = ""  # Clear the input field
 
-    # Text input for ingredients, tied to session state and using on_change callback
-        st.sidebar.text_input(
-         "Enter your ingredient",
+        # Text input for ingredients, tied to session state and using on_change callback
+        st.text_input(
+            "Enter your ingredient",
             placeholder="e.g. chicken, rice",
             key='ingredient_input',
-             on_change=add_ingredient  # This will be triggered when input changes or the "Enter" key is pressed
-)
+            on_change=add_ingredient  # This will be triggered when input changes or the "Enter" key is pressed
+        )
 
-# Display the list of ingredients
-st.sidebar.header("Current Ingredients")
-if st.session_state['ingredients']:
-    # Display each ingredient on a new line using markdown
-    st.sidebar.markdown("\n".join(f"- {ingredient}" for ingredient in st.session_state['ingredients']))
-else:
-    st.sidebar.write("No ingredients added.")
+        # Display the list of ingredients
+        st.header("Current Ingredients")
+        if st.session_state['ingredients']:
+            # Display each ingredient on a new line using markdown
+            st.markdown("\n".join(f"- {ingredient}" for ingredient in st.session_state['ingredients']))
+        else:
+            st.write("No ingredients added.")
 
 # Fetching recipes section
 st.header("Quick Bite")
@@ -126,7 +129,6 @@ if st.button("FETCH RECIPES"):
 
                     # Link to the recipe
                     st.markdown(f"[View Full Recipe](https://spoonacular.com/recipes/{recipe['id']})", unsafe_allow_html=True)
-
     else:
         st.warning("Please add at least one ingredient to fetch recipes.")
 
@@ -136,4 +138,3 @@ with st.expander("Show Additional Features"):
     show_nutrition = st.checkbox("Show Nutrition Facts", value=True)
     show_prices = st.checkbox("Show Prices", value=True)
     show_missing_item_prices = st.checkbox("Show Missing Item Prices", value=True)
-

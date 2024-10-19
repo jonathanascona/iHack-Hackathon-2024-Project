@@ -1,7 +1,7 @@
 import requests
 
 # Your Spoonacular API key (replace with your actual API key)
-API_KEY = "your_spoonacular_api_key"
+API_KEY = "9d85a62254ac4052b9ff54e5d8425688"
 
 # Function to fetch recipes based on ingredients
 def get_recipes(ingredients):

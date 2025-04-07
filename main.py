@@ -1,3 +1,11 @@
+# Last year during Fall Semester, me and one of my best friends signed uo for our first Hackathon together. He had an excellent idea for an app that could use the power of ai to find and build recipes for a user that had ingredients, but did not know what to do with them.
+
+# His job was the UI, mine was the backend. I was so proud of myself, because I built the backend functions in Python in less than an hour and had it fully functional without error. He really struggled building a ui from scratch until I suggested that we build it using streamlit. 
+
+# We still laugh about that to this day. We won for the category which we applied which was "Best Use of A Streamlit Interface"
+
+# I'm really proud of this, because I made this with one of my best friends. This project showed me that realistically, anything and any type of idea can be made with an open mind. I never looked back since, and I still use Streamlit for my personal projects.
+
 import streamlit as st
 import pandas as pd
 from PIL import Image
